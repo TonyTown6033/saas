@@ -1,0 +1,26 @@
+# FastAPI 和 ASGI 服务器
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# 数据库
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# 认证和安全
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic-settings==2.1.0
+
+# HTTP 客户端
+httpx==0.26.0
+
+# Redis
+redis==5.0.1
+hiredis==2.3.2
+
+# 工具
+pydantic==2.5.3
+email-validator==2.3.0
