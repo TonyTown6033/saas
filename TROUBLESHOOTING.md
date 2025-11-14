@@ -228,6 +228,190 @@ pip install psycopg2-binary==2.9.9
 pip install python-jose[cryptography]
 ```
 
+### 问题 8: Bcrypt 版本兼容性问题
+
+**错误信息:**
+```
+AttributeError: module 'bcrypt' has no attribute '__about__'
+ValueError: password cannot be longer than 72 bytes
+```
+
+**原因:**
+bcrypt 5.0.0+ 与 passlib 1.7.4 不兼容。
+
+**解决方法:**
+
+1. 降级 bcrypt 到 4.1.3：
+```bash
+cd backend
+uv pip install bcrypt==4.1.3
+# 或
+pip install bcrypt==4.1.3
+```
+
+2. 验证安装：
+```bash
+python -c "import bcrypt; print(bcrypt.__version__)"
+# 应该显示 4.1.3
+```
+
+### 问题 9: SQLAlchemy metadata 字段冲突
+
+**错误信息:**
+```
+sqlalchemy.exc.InvalidRequestError: Attribute name 'metadata' is reserved when using the Declarative API
+```
+
+**原因:**
+SQLAlchemy 的 Base 类有内置的 `metadata` 属性。
+
+**解决方法:**
+
+在模型中使用 `service_metadata` 作为列名：
+```python
+# 正确的方式
+service_metadata = Column("metadata", JSON, default=dict)
+
+# 错误的方式（会导致冲突）
+metadata = Column(JSON, default=dict)
+```
+
+### 问题 10: SOCKS 代理错误
+
+**错误信息:**
+```
+ImportError: Using SOCKS proxy, but the 'socksio' package is not installed
+httpx.ConnectError: [Errno 61] Connection refused
+```
+
+**原因:**
+系统环境变量中设置了代理，影响了服务间通信。
+
+**解决方法:**
+
+1. 临时清除代理：
+```bash
+unset ALL_PROXY
+unset all_proxy
+unset HTTPS_PROXY
+unset https_proxy
+unset HTTP_PROXY
+unset http_proxy
+```
+
+2. 在启动脚本中清除代理：
+```bash
+# 启动服务前
+cd examples/plugins/demo-service
+unset ALL_PROXY && unset all_proxy && unset HTTPS_PROXY && unset https_proxy
+python main.py
+```
+
+3. 或在代码中配置：
+```python
+# 在 httpx 客户端中禁用代理
+async with httpx.AsyncClient(proxies=None) as client:
+    response = await client.post(url, json=data)
+```
+
+### 问题 11: PostgreSQL 角色不存在
+
+**错误信息:**
+```
+psycopg2.OperationalError: FATAL: role "saas_user" does not exist
+```
+
+**原因:**
+- 本地 PostgreSQL 正在运行，但没有创建所需的用户
+- Docker 和本地 PostgreSQL 端口冲突
+
+**解决方法:**
+
+1. 停止本地 PostgreSQL：
+```bash
+# macOS
+brew services stop postgresql@14
+
+# Linux
+sudo systemctl stop postgresql
+```
+
+2. 使用 Docker PostgreSQL：
+```bash
+docker-compose down -v
+docker-compose up -d postgres redis
+```
+
+3. 或在本地 PostgreSQL 中创建用户：
+```bash
+psql -U postgres <<EOF
+CREATE DATABASE saas_platform;
+CREATE USER saas_user WITH PASSWORD 'saas_password';
+GRANT ALL PRIVILEGES ON DATABASE saas_platform TO saas_user;
+\c saas_platform
+GRANT ALL ON SCHEMA public TO saas_user;
+EOF
+```
+
+### 问题 12: email-validator 缺失
+
+**错误信息:**
+```
+ModuleNotFoundError: No module named 'email_validator'
+```
+
+**原因:**
+Pydantic 的 `EmailStr` 类型需要 email-validator 包。
+
+**解决方法:**
+
+```bash
+cd backend
+uv pip install email-validator==2.3.0
+```
+
+### 问题 13: 前端 CORS 错误
+
+**错误信息:**
+```
+Access to XMLHttpRequest has been blocked by CORS policy
+```
+
+**原因:**
+- 后端 CORS 配置不正确
+- 前端直接访问后端而不是通过代理
+
+**解决方法:**
+
+1. 检查前端配置（vite.config.js）：
+```javascript
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      }
+    }
+  }
+})
+```
+
+2. 使用 `/api/` 前缀访问：
+```javascript
+// 正确
+axios.get('/api/demo-service/items')
+
+// 错误（会导致 CORS 错误）
+axios.get('http://localhost:8000/api/demo-service/items')
+```
+
+3. 检查后端 CORS 配置：
+```python
+# backend/shared/config.py
+CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
+```
+
 ## 分步测试
 
 ### 步骤 1: 测试基础导入

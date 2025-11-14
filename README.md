@@ -1,8 +1,81 @@
 # 微服务热插拔 SAAS 平台
 
-基于 Vue + FastAPI + PostgreSQL 的可扩展 SAAS 平台，支持动态服务注册和插拔。
+> 🚀 一个支持动态服务注册和热插拔的现代化微服务 SAAS 平台
 
-## 架构概览
+基于 **Vue 3 + FastAPI + PostgreSQL** 构建，提供完整的企业级多租户解决方案。
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
+[![Vue](https://img.shields.io/badge/Vue-3.0+-brightgreen.svg)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
+
+## ✨ 特点
+
+- 🔌 **热插拔服务**：无需重启即可动态添加/移除微服务
+- 🏗️ **微服务架构**：服务注册中心、API 网关、核心服务完整实现
+- 👥 **多租户支持**：内置租户隔离和管理
+- 🔐 **企业级认证**：JWT 认证 + RBAC 权限控制
+- 📊 **自动服务发现**：服务自动注册、心跳监控、健康检查
+- 📖 **完整文档**：从新手入门到生产部署的全面指南
+- 🎨 **Vue 3 前端**：现代化管理界面
+
+## 🎯 快速开始
+
+### 前置要求
+
+- Docker & Docker Compose（推荐）
+- 或 Python 3.11+ + PostgreSQL 14+ + Redis 7+
+
+### 5 分钟快速启动
+
+```bash
+# 克隆项目
+git clone <your-repo-url> SAAS
+cd SAAS
+
+# 启动所有服务（使用 Docker）
+docker-compose up -d
+
+# 检查服务状态
+docker-compose ps
+
+# 运行系统测试
+bash scripts/test-system.sh
+```
+
+访问服务：
+- 🌐 **API 网关**: http://localhost:8000/docs
+- 📋 **服务注册中心**: http://localhost:8001/docs
+- 🔑 **核心服务**: http://localhost:8002/docs
+- 💻 **前端界面**: http://localhost:5173
+
+### 手动启动（开发模式）
+
+详细步骤请查看 [新手完全指南](./docs/新手完全指南.md)
+
+## 📚 文档
+
+### 新手入门
+| 文档 | 说明 |
+|------|------|
+| [🎓 新手完全指南](./docs/新手完全指南.md) | **从零开始的详细教程（推荐）** |
+| [⚡ 快速开始](./docs/QUICKSTART.md) | 5 分钟快速启动 |
+| [📖 开始使用](./GETTING_STARTED.md) | 基础使用说明 |
+
+### 开发文档
+| 文档 | 说明 |
+|------|------|
+| [🔌 插件开发指南](./docs/PLUGIN_DEVELOPMENT.md) | 创建你的第一个插件 |
+| [📡 API 参考手册](./docs/API_REFERENCE.md) | 完整的 API 文档和示例 |
+| [🏗️ 架构设计](./docs/ARCHITECTURE.md) | 系统架构和设计原理 |
+
+### 运维文档
+| 文档 | 说明 |
+|------|------|
+| [🚀 生产部署指南](./docs/DEPLOYMENT.md) | Docker/K8s 部署最佳实践 |
+| [🔧 故障排查](./TROUBLESHOOTING.md) | 常见问题和解决方案 |
+
+## 🏗️ 架构概览
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -179,10 +252,124 @@ npm run dev
 docker-compose up -d
 ```
 
-## 开发插件
+## 🎮 示例插件
 
-查看 `examples/plugins/` 目录获取插件开发示例。
+项目包含多个示例插件帮助你快速上手：
 
-## 文档
+| 插件 | 端口 | 说明 |
+|------|------|------|
+| demo-service | 8003 | 基础 CRUD 示例 |
+| dashboard-service | 8004 | 仪表板展示 |
 
-详细文档请查看 `docs/` 目录。
+### 启动演示服务
+
+```bash
+# 启动演示服务
+cd examples/plugins/demo-service
+python main.py
+
+# 通过网关访问
+curl http://localhost:8000/api/demo-service/items
+```
+
+## 🛠️ 开发你的第一个插件
+
+创建插件只需 5 个步骤：
+
+```python
+# 1. 定义服务配置
+SERVICE_CONFIG = {
+    "name": "my-service",
+    "port": 8100,
+    # ...
+}
+
+# 2. 创建 FastAPI 应用
+app = FastAPI()
+
+# 3. 注册到服务中心
+await register_service()
+
+# 4. 发送心跳保持活跃
+asyncio.create_task(send_heartbeat())
+
+# 5. 实现业务逻辑
+@app.get("/hello")
+async def hello():
+    return {"message": "Hello!"}
+```
+
+详细教程：[插件开发指南](./docs/PLUGIN_DEVELOPMENT.md)
+
+## 🧪 测试
+
+运行完整的系统测试：
+
+```bash
+bash scripts/test-system.sh
+```
+
+测试包括：
+- ✅ 数据库连接
+- ✅ Redis 连接
+- ✅ 服务注册
+- ✅ 用户认证
+- ✅ API 网关路由
+- ✅ 插件服务
+
+## 📦 生产部署
+
+### 使用 Docker Compose
+
+```bash
+# 生产环境配置
+docker-compose -f docker-compose.prod.yml up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 扩展服务
+docker-compose up -d --scale gateway=3
+```
+
+### 环境变量配置
+
+关键配置项：
+
+```bash
+# 数据库
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+
+# Redis
+REDIS_URL=redis://host:6379/0
+
+# JWT 密钥
+SECRET_KEY=your-secret-key-here
+
+# CORS 配置
+CORS_ORIGINS=https://yourdomain.com
+```
+
+## 🤝 贡献
+
+欢迎贡献！请查看以下指南：
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证。
+
+## 🙏 致谢
+
+- [FastAPI](https://fastapi.tiangolo.com/) - 现代化的 Python Web 框架
+- [Vue 3](https://vuejs.org/) - 渐进式 JavaScript 框架
+- [PostgreSQL](https://www.postgresql.org/) - 强大的开源数据库
+
+---
+
+**Happy Coding!** 如有问题，请查看 [文档](./docs) 或提交 [Issue](https://github.com/your-repo/issues)。
